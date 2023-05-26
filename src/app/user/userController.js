@@ -1,67 +1,56 @@
 import express from 'express';
 import { saveUserInfo,saveUserPassword,getUserInfo } from './userService.js'; 
 import bcrypt from "bcrypt";
+import createError from 'http-errors';
 import jwt from "jsonwebtoken";
 
 
 const userRouter = express.Router();
 
-const userRegistration = async (req,res) =>{
+const userRegistration = async (req,res,next) =>{
     try {
         const {email,firstName,lastName,phone} = req.body;
-        console.log(email);
+       
         if(!email || !firstName || !lastName || !phone){
-            res.status(400).send({
-                message : "required necessary req body"
-            })
+            next({status:400,message:"Bad Request"})
         }
         const userModel = await saveUserInfo(req.body);
         res.status(200).send({
             message : "submitted successfully"
         })
     } catch (error) {
-        console.log("error"+error.message);
-        res.status(400).send({
-            message : error.message
-        })
+        next({status:400,message:"Bad Request"})
     }
 }
 
-const userLogin = async (req,res) =>{
+const userLogin = async (req,res,next) =>{
     try {
-        console.log(req.body);
         const {email,password} = req.body;
         if(!password || !email){
-            res.status(400).send({
-                message : "necessary field"
-            })
+            next({status:400,message:"Bad Request"})
         }
-        //const isPasswordValid = await bcrypt.hash(password, 10);
         const userModel = await getUserInfo(email);
-        console.log("userModel",userModel);
+        console.log("userModel",userModel)
         if(userModel){
             const hashpassword = userModel.password;
             const isPasswordValid = await bcrypt.compare(password, hashpassword);
             if(isPasswordValid){
                 const jwtoken = jwt.sign({
                     email: userModel.email,password:password
-                  }, 'secret_key', { expiresIn: 60 });
-                console.log(jwtoken);
+                  }, 'secret_key', { expiresIn: 60*60 });
+                
                 res.status(200).send({
                     data : jwtoken,
                     message : "login",
                     status : "success"
                 })
             }else{
-                res.status(403).send({
-                    message : "Authintication error"
-                })
+                next({status:403,message:"Authintication error"});
             }
         }
+        next({status:403,message:"InValid Loggin or Password"});
     } catch (error) {
-        res.status(403).send({
-            message : "err" + error
-        })
+        next({status:403,message:"Authintication error"})
     }
 }
 
@@ -78,27 +67,22 @@ const checkPasswordValidation = (req) => {
 const changePassword = async (req,res) => {
     try {
         if(checkPasswordValidation(req)){
-            res.status(400).send({
-                message : "Password validation error"
-            })
+            next({status:400,message:"Password validation error"})
         }else{
             const {email,password} = req.body;
-            console.log(password);
+            
             const hashPassword = await bcrypt.hash(password, 10);
-            console.log(hashPassword);
+           
             if(hashPassword){
                 const userModel = await saveUserPassword(email,hashPassword);
-                console.log(userModel);
+                
                 res.status(200).send({
                     message : "submitted successfully"
                 })
             }
         }
     } catch (error) {
-        console.log("error"+error.message);
-        res.status(400).send({
-            message : error.message
-        })
+        next({status:400,message:"Bad Request"})
     }
 }
 
@@ -110,7 +94,7 @@ userRouter.put('/changePassword',changePassword);
 userRouter.delete('/');
 
 const userConfiguration = (app) => {
-    app.use('/user',userRouter)
+    app.use('/',userRouter)
 }
 
 export default userConfiguration;
