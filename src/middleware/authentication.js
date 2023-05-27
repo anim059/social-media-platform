@@ -5,14 +5,19 @@ export const authenticateMiddleware = (req,res,next) => {
         next();
     }else{
         try {
-            const authorizationToken = req.headers.authorization.split(' ')[1];
+            if(req.headers.authorization){
+                const authorizationToken = req.headers.authorization.split(' ')[1];
            
-            const jwtoken = jwt.verify(authorizationToken,'secret_key');
-           
-            const user = models.User.findOne({email:jwtoken.email});
-          
+                const jwtoken = jwt.verify(authorizationToken,'secret_key');
             
-            if(!user){
+                const user = models.User.findOne({email:jwtoken.email});
+            
+                
+                if(!user){
+                    const errorRes = {status:403,message:"authorization error"};
+                    return next(errorRes);
+                }
+            }else{
                 const errorRes = {status:403,message:"authorization error"};
                 return next(errorRes);
             }

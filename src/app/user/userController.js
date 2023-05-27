@@ -4,6 +4,8 @@ import bcrypt from "bcrypt";
 import createError from 'http-errors';
 import jwt from "jsonwebtoken";
 
+import appLocalVariable from '../../config/appLocal.js'
+
 
 const userRouter = express.Router();
 
@@ -32,6 +34,9 @@ const userLogin = async (req,res,next) =>{
         const userModel = await getUserInfo(email);
         console.log("userModel",userModel)
         if(userModel){
+            appLocalVariable.locals.userId = userModel._id;
+            //console.log("appLocalVariable",appLocalVariable.locals.userId);
+            
             const hashpassword = userModel.password;
             const isPasswordValid = await bcrypt.compare(password, hashpassword);
             if(isPasswordValid){
@@ -47,8 +52,9 @@ const userLogin = async (req,res,next) =>{
             }else{
                 next({status:403,message:"Authintication error"});
             }
+        }else{
+            next({status:403,message:"InValid Loggin or Password"});
         }
-        next({status:403,message:"InValid Loggin or Password"});
     } catch (error) {
         next({status:403,message:"Authintication error"})
     }
