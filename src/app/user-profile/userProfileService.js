@@ -10,6 +10,7 @@ export const getUserProfileInfo = async (userId) => {
 
 export const saveUserProfileInfo = async (reqBody,userId) => {
     const userProfile =  new models.UserProfile({...reqBody,user:userId});
+    const userPrivacy = new models.PrivacySetting({user:userId}).save();
     const saveUserProfile =  userProfile.save();
     return saveUserProfile;
 }

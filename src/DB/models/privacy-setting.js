@@ -9,11 +9,11 @@ const privacySettingSchema = new Schema({
     },
     isPublic: {
         type: Boolean,
-        default: false
+        default: true
       },
     isFriendsOnly: {
         type: Boolean,
-        default: true
+        default: false
     },
 })
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { saveUserInfo,saveUserPassword,getUserInfo } from './userService.js'; 
+import { saveUserInfo,saveUserPassword,getUserInfo,findUser } from './userService.js'; 
 import bcrypt from "bcrypt";
 import createError from 'http-errors';
 import jwt from "jsonwebtoken";
@@ -92,8 +92,31 @@ const changePassword = async (req,res) => {
     }
 }
 
+const searchUsers = async (req,res,next) =>{
+    try {
+        const searchValue = req.query.user ? req.query.user : '';
+        const userModel = await findUser(searchValue);
+        if(userModel){
+            const userList = userModel.map((user)=>{
+                return {firstName:user.firstName,lastName:user.lastName};
+            })
+            console.log('userlist',userList);
+            
+            res.status(200).send({
+                message : "found",
+                data:userList
+            })
+        }else{
+            res.status(404).send({
+                message : "Not found"
+            })
+        }
+    } catch (error) {
+        next({status:500,message:"Internal Server Error"})
+    }
+}
 
-userRouter.get('/');
+userRouter.get('/search',searchUsers)
 userRouter.post('/registration',userRegistration);
 userRouter.post('/login',userLogin);
 userRouter.put('/changePassword',changePassword);
