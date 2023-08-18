@@ -11,7 +11,7 @@ const userProfileSchema = new Schema(
     gender : {type:String,enum: ['Male', 'Female']},
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Reference to the User model
+        ref: 'user', // Reference to the User model
     },
   }
 )

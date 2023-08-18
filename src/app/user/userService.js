@@ -19,14 +19,21 @@ export const getUserInfo = async (uemail) => {
     return user;
 }
 
-export const findUser = async (param='') => {
+export const findUser = async (param = '',loggedInUserId) => {
     let user;
     console.log("param",param);
     if(param === ''){
         user = await models.User.find();
         console.log("user",user);
     }else{
-        user = await models.User.find({$or:[{firstName:{$regex:param}},{lastName:{$regex:param}}]});
+        console.log('loggedInUserId',loggedInUserId);
+        user = await models.User.find({$or:
+            [
+                {firstName:{$regex:param}},
+                {lastName:{$regex:param}}
+            ],
+            _id:{ $ne:loggedInUserId }
+        });
         console.log("user 2",user);
     }
 

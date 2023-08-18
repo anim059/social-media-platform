@@ -2,10 +2,11 @@ import mongoose from "mongoose";
 
 const { Schema } = mongoose;
 
-const privacySettingSchema = new Schema({
+const privacySettingSchema = new Schema(
+    {
     user :{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'User'
+        ref:'user'
     },
     isPublic: {
         type: Boolean,
@@ -15,7 +16,8 @@ const privacySettingSchema = new Schema({
         type: Boolean,
         default: false
     },
-})
+}
+)
 
 export const PrivacySetting = mongoose.model('privacySetting', privacySettingSchema);
 
