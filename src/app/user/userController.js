@@ -121,8 +121,8 @@ userRouter.post('/login',userLogin);
 userRouter.put('/changePassword',changePassword);
 userRouter.delete('/');
 
-const userConfiguration = (app) => {
+const userConfig = (app) => {
     app.use('/',userRouter)
 }
 
-export default userConfiguration;
+export default userConfig;
