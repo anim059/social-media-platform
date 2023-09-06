@@ -1,37 +1,41 @@
 import express from 'express';
-import { saveUserInfo,saveUserPassword,getUserInfo } from './userService.js'; 
+import { saveUserInfo, saveUserPassword, getUserInfo, findUser } from './userService.js'; 
 import bcrypt from "bcrypt";
 import createError from 'http-errors';
 import jwt from "jsonwebtoken";
+
+import appLocalVariable from '../../config/appLocal.js'
 
 
 const userRouter = express.Router();
 
 const userRegistration = async (req,res,next) =>{
     try {
-        const {email,firstName,lastName,phone} = req.body;
+        const {email, firstName, lastName, phone} = req.body;
        
         if(!email || !firstName || !lastName || !phone){
-            next({status:400,message:"Bad Request"})
+            next({status:400,message:"Bad Request,messing field"})
         }
         const userModel = await saveUserInfo(req.body);
         res.status(200).send({
             message : "submitted successfully"
         })
     } catch (error) {
-        next({status:400,message:"Bad Request"})
+        next({status:400,message:error})
     }
 }
 
 const userLogin = async (req,res,next) =>{
     try {
-        const {email,password} = req.body;
+        const { email, password } = req.body;
         if(!password || !email){
             next({status:400,message:"Bad Request"})
         }
         const userModel = await getUserInfo(email);
-        console.log("userModel",userModel)
         if(userModel){
+            appLocalVariable.locals.userId = userModel._id;
+            //console.log("appLocalVariable",appLocalVariable.locals.userId);
+            
             const hashpassword = userModel.password;
             const isPasswordValid = await bcrypt.compare(password, hashpassword);
             if(isPasswordValid){
@@ -47,15 +51,16 @@ const userLogin = async (req,res,next) =>{
             }else{
                 next({status:403,message:"Authintication error"});
             }
+        }else{
+            next({status:403,message:"InValid Loggin or Password"});
         }
-        next({status:403,message:"InValid Loggin or Password"});
     } catch (error) {
         next({status:403,message:"Authintication error"})
     }
 }
 
 const checkPasswordValidation = (req) => {
-    const {email,password,confirePassword} = req.body;
+    const { email, password, confirePassword } = req.body;
     const check1 = !password || !email || !confirePassword;
     const check2 = password !== confirePassword
     const check3 = confirePassword.length < 8;
@@ -69,7 +74,7 @@ const changePassword = async (req,res) => {
         if(checkPasswordValidation(req)){
             next({status:400,message:"Password validation error"})
         }else{
-            const {email,password} = req.body;
+            const { email, password } = req.body;
             
             const hashPassword = await bcrypt.hash(password, 10);
            
@@ -86,8 +91,31 @@ const changePassword = async (req,res) => {
     }
 }
 
+const searchUsers = async (req,res,next) =>{
+    try {
+        const loggedInUserId = appLocalVariable.locals.userId;
+        const searchValue = req.query.user ? req.query.user : '';
+        const userModel = await findUser(searchValue,loggedInUserId);
+        
+        if(userModel){
+            let userList = userModel.map((user)=>{
+                return {id:user._id, firstName:user.firstName,lastName:user.lastName};
+            })
+            res.status(200).send({
+                message : "found",
+                data:userList
+            })
+        }else{
+            res.status(404).send({
+                message : "Not found"
+            })
+        }
+    } catch (error) {
+        next({status:500,message:"Internal Server Error"})
+    }
+}
 
-userRouter.get('/');
+userRouter.get('/search',searchUsers)
 userRouter.post('/registration',userRegistration);
 userRouter.post('/login',userLogin);
 userRouter.put('/changePassword',changePassword);

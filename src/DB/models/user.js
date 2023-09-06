@@ -31,6 +31,15 @@ const userSchema = new Schema(
     }
   },
   {
+    virtuals: {
+      fullName: {
+        get() {
+          return this.firstName + ' ' + this.lastName;
+        }
+      }
+    }
+  },
+  {
     timestamps : true
   }
 );
