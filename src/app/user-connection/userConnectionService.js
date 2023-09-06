@@ -31,19 +31,11 @@ export const updateFriendReq = async ( friendId, loggedInUserId, status ) => {
     if(status === "Blocked" || status === "Unfriend"){
         let user = await removeConnection( loggedInUserId, friendId );
         let senderUser = await removeConnection( friendId, loggedInUserId ); 
-        if(user && senderUser){
-            FriendConnection = await models.FriendReq.findOneAndUpdate({$or:[
-                {senderId:friendId,receiverId:loggedInUserId},
-                {senderId:loggedInUserId,receiverId:friendId}
-            ]},{status:status});
-        }
-    }else{
-        FriendConnection = await models.FriendReq.findOneAndUpdate({$or:[
-            {senderId:friendId,receiverId:loggedInUserId},
-            {senderId:loggedInUserId,receiverId:friendId}
-        ]},{status:status});
     }
-    console.log(FriendConnection);
+    FriendConnection = await models.FriendReq.findOneAndUpdate({$or:[
+        {senderId:friendId,receiverId:loggedInUserId},
+        {senderId:loggedInUserId,receiverId:friendId}
+    ]},{status:status});
     return FriendConnection;
 }
 
